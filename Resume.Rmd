@@ -1,0 +1,119 @@
+---
+title: "Zipf's law test for 2011 Eu Census"
+author: "Marie Bruguet"
+date: "10/06/2020"
+output:
+  pdf_document: default 
+  word_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# The Zipf's Law
+
+We use the following regression between Cities rank and Cities size:
+*log(rank)=a-blog(size)+e*
+
+A city of rank r in the (descending) order of cities has a size S equal to 1/r times the size of the largest city in that country. For U.S. cities, the size S of Los Angeles, the second largest, should be 1⁄2 the size of New York.
+
+# 2011 European Data
+
+We test the Zipf's law for 29 european countries, here are the estimates coefficients (wihch should be close to -1).
+
+```{r Data, echo=FALSE, warning=FALSE, message=FALSE}
+library(dplyr)
+library(knitr)
+test=read.csv("Fichiers/test/Zipf/Zipf_Eu_2011.csv")
+test<-mutate(test,"X"=NULL)
+kable(test)
+```
+
+
+
+# Null hypothesis analysis
+
+## Non rejection of Ho
+
+```{r Ho,echo=FALSE}
+test %>% filter(t.student<1.96 & t.student > -1.96) %>% kable()
+
+```
+
+For those 10 countries we cannot reject the Ho, that means that we cannot say that there is a significant link between the rank and the size of population. We consider the coefficient as 0. 
+
+For Liechtenstein the fact that we only have 11 cities is an answer to this situation, the sample is too small to conclude to a real link.
+We might probably have the same answer for Croatia, Finland, Latvia and Malta who have relative hight estimate coefficients but a small number of cities.
+
+For the 5 others countries we can notice that the estimate coefficient is pretty close to 0, with positive or negative correlation. We can assume that the student test cannot reject the null hypothesis because the coefficient is in fact close to zero, which means that the Zipf's law is completed rejected for thoses countries. 
+
+
+## Rejection of Ho
+
+19 countries reject the null hypothesys according to the t Student, so the coefficient should be significantly different from 0. Moreover the very low p Value confirme that theses coefficients are significants.
+
+But we notice two differents situations, one where the relation is decreasing as assume by the Zipf's law and another with an increasing link.
+
+- Countries with a *decreasing* link
+```{r Decreasing, echo=FALSE}
+
+test %>% filter(t.student < -1.96 & estimate < 0) %>% kable()
+
+```
+
+```{r Summary D, echo=FALSE}
+test %>% filter(t.student < -1.96 & estimate < 0) %>% summary() %>% kable()
+```
+For theses 10 countries we have, as excepted, a decreasing link between Rank and Size. We notice that the coefficient is smaller than the Zipf's law forecast (around -1). 
+
+
+- Countries with an *increasing* link
+```{r Increasing, echo=FALSE}
+test %>% filter(t.student > 1.96 & estimate > 0) %>% kable()
+
+```
+```{r Summary I, echo=FALSE}
+test %>% filter(t.student > 1.96 & estimate > 0) %>% summary() %>% kable()
+
+```
+For theses 5 countries the link is increasing, it seems to mean that the more a city is populated, the higher rank it has (it make no sens for our work ).
+
+
+# Visual examples
+
+## Zipf's law accepted: Germany a decreasing example
+
+Germany seems to have the data sample that fit the most with the Zip's law. We have a *decreasing* relation between the rank and the size, around **-0,22**. We have a *t Student* at **-37,56** so larger than |1,96| which means that we reject the Ho and the coefficient is significantely different from 0. 
+
+```{r plot1, echo=FALSE, warning=FALSE, message=FALSE}
+library(ggplot2)
+df1=read.csv("Fichiers/Germany/De_Pop_Cities_2011.csv")
+
+ggplot(df1, aes(x=De_LnPc_2011, y=De_RankLn)) +
+  geom_smooth(method=lm , color="red", fill="#69b3a2", se=TRUE)+
+  ggtitle("Zipf's Law test: Germany") +
+  xlab("Population size (log)") + ylab("City rank (log)")
+
+```
+
+## Zipf's law rejected: France an increasing example
+
+France seems to have a relation complety opposit to the Zipf's law. We have an *increasing* relation between the rank and the size, around **0,078**. We have a *t Student* at **20,48** so larger than |1,96| which means that we reject the Ho and the coefficient is significantely different from 0.
+
+```{r plot2, echo=FALSE, warning=FALSE, message=FALSE}
+df2=read.csv("Fichiers/France/Fr_Pop_Cities_2011.csv")
+
+ggplot(df2, aes(x=Fr_LnPc_2011, y=Fr_RankLn)) +
+  geom_smooth(method=lm , color="red", fill="#69b3a2", se=TRUE)+
+  ggtitle("Zipf's Law test: France") +
+  xlab("Population size (log)") + ylab("City rank (log)")
+```
+
+# Conclusion
+
+On 29 sample, **14** one confirmed statisticaly that there is a *decreasing relation* between Cities rank and Cities size as assumed by the Zipf's law. But since we have much larger sample than 135 variables, the estimate coefficient seems to be closer to **-0.2362 on average** than to -1.
+For **10** countries we cannot rejected the null hypothesys, which means that there is statisticaly *no link* between Rank and Size.
+Then for **5** countries, we reject the null hypothesys, but the relation is surprising since there is an *increasing relation* between Cities rank and Cities size close to **00.7 on average.** 
